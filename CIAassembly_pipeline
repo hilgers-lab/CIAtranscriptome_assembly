@@ -12,19 +12,19 @@ rule all:
 rule genome:
     output: "annotation/genome.fa"
     shell: """
-        ln -s /data/repository/organisms/dm6_ensembl/genome_fasta/genome.fa {output}
+        ln -s /data/genome.fa {output}
         """
 
 rule transcriptome:
     output: "annotation/genes.gtf"
     shell: """
-        ln -s /data/repository/organisms/dm6_ensembl/ensembl/release-96/genes.gtf {output}
+        ln -s /data/genes.gtf {output}
         """
 
 rule chrm_sizes:
     output: "annotation/genome.chrom.sizes"
     shell: """
-        ln -s /data/repository/organisms/dm6_ensembl/genome_fasta/genome.chrom.sizes {output}
+        ln -s /data/genome.chrom.sizes {output}
         """
 
 rule genome_idx:
@@ -58,7 +58,7 @@ rule bam2bed12minimap2:
     threads: 20
     conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
     shell: """
-            python /data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/bin/bam2Bed12.py -i {input[0]} > {output[0]}
+            python bam2Bed12.py -i {input[0]} > {output[0]}
         """
 
 rule flair_correct:
@@ -88,33 +88,29 @@ rule flair_collapse_edp_tss:
     params:
         gnome="annotation/genome.fa",
         outDir="assembly/flair/{sample}_collapsed_annot.edp.tss/{sample}",
-        tmp="/data/hilgers/group/alfonso/projects/2021_LRS_paper/data/tmp"
+        tmp="/data/tmp"
     threads: 20
-    conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
     shell: """
     module load minimap2
-    python /data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/flair.py collapse -g {params.gnome} --temp_dir {params.tmp} --max_ends 5  -r {input[0]} -t 20 -q {input[1]} -f {input[2]} -p {input[3]} -o {params.outDir}   -s 3
+    python flair.py collapse -g {params.gnome} --temp_dir {params.tmp} --max_ends 5  -r {input[0]} -t 20 -q {input[1]} -f {input[2]} -p {input[3]} -o {params.outDir}   -s 3
 
     """
 rule sqanty_qc_normal:
     input: "assembly/flair/{sample}_collapsed_annot.edp.tss/{sample}.isoforms.gtf",
-           "annotation/genes.gtf",
-           "annotation/promoter.db.edp.bed",
-           "/data/hilgers/group/alfonso/projects/LongReadSeq/2020_apa_reg_paper_code/tables/merged.clusters50.bed",
-           "/data/hilgers/group/alfonso/projects/2021_LRS_paper/repo/sqanti.polya.list",
-           "/data/hilgers/group/alfonso/projects/2021_LRS_paper/repo/splice_junctions_filtered.tab"
+           "/data/genes.gtf",
+           "/data/sqanti.polya.list",
+           "/data/splice_junctions_filtered.tab"
     output:
            "assembly/sqanti/{sample}_collapsed_annot.edp.tss/{sample}.sqanti_corrected.gtf"
     params:
-        gnome="/data/repository/organisms/dm6_ensembl/genome_fasta/genome.fa",
+        gnome="/data/genome.fa",
         outDir="assembly/sqanti/{sample}_collapsed_annot.edp.tss/",
         prefix="{sample}.sqanti",
         internalPrimingWindow=50
     threads: 20
-    conda: "/data/hilgers/group/alfonso/projects/2021_LRS_paper/envs/sqanti.yml"
     shell: """
     module load minimap2
-    python /data/hilgers/group/alfonso/projects/LongReadSeq/bin/SQANTI3/sqanti3_qc.py --gtf {input[0]}  {input[1]}  {params.gnome} -o {params.prefix} -d {params.outDir} -w {params.internalPrimingWindow}  --polyA_motif_list {input[4]} -c {input[5]}
+    python sqanti3_qc.py --gtf {input[0]}  {input[1]}  {params.gnome} -o {params.prefix} -d {params.outDir} -w {params.internalPrimingWindow}  --polyA_motif_list {input[4]} -c {input[5]}
 
     """
 rule endCorrection:
@@ -125,8 +121,8 @@ rule endCorrection:
     output:
            "cia_assemblies/{sample}.end.corrected.assembly.gtf"
     params:
-        endGuides="/data/hilgers/group/alfonso/projects/2021_LRS_paper/data/cia_isoforms/clusters.rds/combined.rds.clusters.new.gff",
-        refAnnot="/data/repository/organisms/dm6_ensembl/ensembl/release-96/genes.gtf",
+        endGuides="/annotation/combined.rds.clusters.new.gff",
+        refAnnot="/annotation/genes.gtf",
         outDir="cia_assemblies",
         prefix="{sample}",
         refStops="assembly/sqanti/{sample}/{sample}_classification.txt" # not so elegant
@@ -134,6 +130,5 @@ rule endCorrection:
     conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
     shell: """
     module load R/3.5.0
-    Rscript ../../results/RDSguidedCorrection.R -a {input[0]}  -e {params.endGuides} -s {params.refStops}  -r {params.refAnnot} -o cia_assemblies -p {params.prefix}
+    Rscript R/RDSguidedCorrection.R -a {input[0]}  -e {params.endGuides} -s {params.refStops}  -r {params.refAnnot} -o cia_assemblies -p {params.prefix}
     """
-    
