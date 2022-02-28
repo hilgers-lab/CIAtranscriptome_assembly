@@ -1,16 +1,13 @@
 os.getcwd()
 localrules: all
-SAMPLE, = glob_wildcards("FASTQ.pooled/{sample}.fastq.gz")
+SAMPLE, = glob_wildcards("FASTQ/{sample}.fastq.gz")
 print(SAMPLE)
 sample=SAMPLE
 
 
-subsampParams = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80,0.90,0.99,1]
-
-
 rule all:
   input:
-  	expand("cia_assemblies/{sample}_samp_{subsamp}.end.corrected.assembly.gtf", sample=SAMPLE, subsamp=subsampParams)
+  	expand("assembly/flair/{sample}_collapsed_annot.edp.tss/{sample}.isoforms.gtf", sample=SAMPLE)
 
 rule genome:
     output: "annotation/genome.fa"
@@ -39,25 +36,14 @@ rule genome_idx:
         minimap2 -t {threads} -k 14 -d {output} {input}
         """
 
-rule FASTQ_subsamp:
-    output:
-        readsSub=temp("FASTQ.pooled.sampling/{sample}_samp_{subsamp}.fastq.gz")
-    params:
-        sampFraction="{subsamp}"
-    threads: 20
-    shell: """
-        seqtk sample -s 100 FASTQ.pooled/{wildcards.sample}.fastq.gz  {wildcards.subsamp} | pigz -p {threads} -9 > {output.readsSub}
-        """
-
-
 rule align:
     input:
-        "FASTQ.pooled.sampling/{sample}_samp_{subsamp}.fastq.gz",
+        "FASTQ/{sample}.fastq.gz",
         "annotation/genome.mmi"
     output:
-        temp("minimap2/{sample}_samp_{subsamp}.bam"),
-        temp("minimap2/{sample}_samp_{subsamp}.bam.bai")
-    threads: 20
+        "minimap2/{sample}.bam",
+        "minimap2/{sample}.bam.bai"
+    threads: 16
     shell: """
         module load minimap2 samtools
         minimap2 -t {threads} -ax splice -u f annotation/genome.fa {input[0]} | samtools sort -@ 4 -o {output[0]} -
@@ -65,11 +51,10 @@ rule align:
         """
 
 rule bam2bed12minimap2:
-    input: "minimap2/{sample}_samp_{subsamp}.bam",
-           "annotation/genome.fa",
-           "minimap2/{sample}_samp_{subsamp}.bam.bai"
+    input: "minimap2/{sample}.bam",
+           "annotation/genome.fa"
     output:
-        "minimap2/{sample}_samp_{subsamp}.classified.bed"
+        "minimap2/{sample}.classified.bed"
     threads: 20
     conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
     shell: """
@@ -77,16 +62,15 @@ rule bam2bed12minimap2:
         """
 
 rule flair_correct:
-    input: "minimap2/{sample}_samp_{subsamp}.classified.bed",
+    input: "minimap2/{sample}.classified.bed",
             "annotation/genome.fa",
             "annotation/genome.chrom.sizes"
     output:
-        "assembly.subsampling/flair/{sample}_samp_{subsamp}_all_corrected.psl"
+        "assembly/flair/{sample}_all_corrected.psl"
     params:
         chromsizes="annotation/genome.chrom.sizes",
         gtf="annotation/genes.gtf",
-        outDir="assembly.subsampling/flair/{sample}_samp_{subsamp}",
-        shortReadJunctions = "/data/hilgers/group/alfonso/projects/2022_ELAV_dependent_Isoforms/data/cellSorting.shortReads/Double_Mutants.STAR/STAR/outJunctions.sorting.bed_junctions.filtered.bed"
+        outDir="assembly/flair/{sample}"
     threads: 20
     conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
     shell: """
@@ -95,59 +79,61 @@ rule flair_correct:
         """
 
 rule flair_collapse_edp_tss:
-    input: "FASTQ.pooled.sampling/{sample}_samp_{subsamp}.fastq.gz",
-           "assembly.subsampling/flair/{sample}_samp_{subsamp}_all_corrected.psl",
+    input: "FASTQ/{sample}.fastq.gz",
+           "assembly/flair/{sample}_all_corrected.psl",
            "annotation/genes.gtf",
            "annotation/promoter.db.edp.bed"
     output:
-           "assembly.subsampling/flair/{sample}_samp_{subsamp}fr.collapsed_assembly/{sample}_samp_{subsamp}.isoforms.gtf"
+           "assembly/flair/{sample}_collapsed_annot.edp.tss/{sample}.isoforms.gtf"
     params:
         gnome="annotation/genome.fa",
-        outDir="assembly.subsampling/flair/{sample}_samp_{subsamp}fr.collapsed_assembly/{sample}_samp_{subsamp}",
+        outDir="assembly/flair/{sample}_collapsed_annot.edp.tss/{sample}",
         tmp="/data/hilgers/group/alfonso/projects/2021_LRS_paper/data/tmp"
     threads: 20
     conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
     shell: """
     module load minimap2
-    python /data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/flair.py collapse -g {params.gnome} --temp_dir {params.tmp} --max_ends 5  -r {input[0]} -t 20 -q {input[1]} -f {input[2]} -p {input[3]} -o {params.outDir}  -s 1
-
+    python /data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/flair.py collapse -g {params.gnome} --temp_dir {params.tmp} --max_ends 5  -r {input[0]} -t 20 -q {input[1]} -f {input[2]} -p {input[3]} -o {params.outDir}   -s 3
 
     """
-rule sqanti_qc:
-    input: "assembly.subsampling/flair/{sample}_samp_{subsamp}fr.collapsed_assembly/{sample}_samp_{subsamp}.isoforms.gtf",
-           "assembly.subsampling/flair/{sample}_samp_{subsamp}_all_corrected.psl",
+rule sqanty_qc_normal:
+    input: "assembly/flair/{sample}_collapsed_annot.edp.tss/{sample}.isoforms.gtf",
            "annotation/genes.gtf",
-           "annotation/promoter.db.edp.bed"
+           "annotation/promoter.db.edp.bed",
+           "/data/hilgers/group/alfonso/projects/LongReadSeq/2020_apa_reg_paper_code/tables/merged.clusters50.bed",
+           "/data/hilgers/group/alfonso/projects/2021_LRS_paper/repo/sqanti.polya.list",
+           "/data/hilgers/group/alfonso/projects/2021_LRS_paper/repo/splice_junctions_filtered.tab"
     output:
-           "assembly.subsampling/sqanti/{sample}_samp_{subsamp}/{sample}_samp_{subsamp}_corrected.gtf",
-           "assembly.subsampling/sqanti/{sample}_samp_{subsamp}/{sample}_samp_{subsamp}_classification.txt"
+           "assembly/sqanti/{sample}_collapsed_annot.edp.tss/{sample}.sqanti_corrected.gtf"
     params:
-        gnome="annotation/genome.fa",
-        outDir="assembly.subsampling/sqanti/{sample}_samp_{subsamp}",
-        tmp="/data/hilgers/group/alfonso/projects/2021_LRS_paper/data/tmp",
-        prefix="{sample}_samp_{subsamp}"
+        gnome="/data/repository/organisms/dm6_ensembl/genome_fasta/genome.fa",
+        outDir="assembly/sqanti/{sample}_collapsed_annot.edp.tss/",
+        prefix="{sample}.sqanti",
+        internalPrimingWindow=50
     threads: 20
-    conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
+    conda: "/data/hilgers/group/alfonso/projects/2021_LRS_paper/envs/sqanti.yml"
     shell: """
-    /home/alfonso/miniconda3/envs/SQANTI3.env/bin/python /data/hilgers/group/alfonso/projects/LongReadSeq/bin/SQANTI3/sqanti3_qc.py --gtf {input[0]}   /data/repository/organisms/dm6_ensembl/Ensembl/release-96/genes.gtf  /data/repository/organisms/dm6_ensembl/genome_fasta/genome.fa -o {params.prefix}   -d {params.outDir}  -w 50  --polyA_motif_list /data/hilgers/group/alfonso/projects/2021_LRS_paper/repo/sqanti.polya.list -c /data/hilgers/group/alfonso/projects/2021_LRS_paper/repo/splice_junctions_filtered.tab
-    """
+    module load minimap2
+    python /data/hilgers/group/alfonso/projects/LongReadSeq/bin/SQANTI3/sqanti3_qc.py --gtf {input[0]}  {input[1]}  {params.gnome} -o {params.prefix} -d {params.outDir} -w {params.internalPrimingWindow}  --polyA_motif_list {input[4]} -c {input[5]}
 
+    """
 rule endCorrection:
-    input: "assembly.subsampling/sqanti/{sample}_samp_{subsamp}/{sample}_samp_{subsamp}_corrected.gtf",
-           "assembly.subsampling/sqanti/{sample}_samp_{subsamp}/{sample}_samp_{subsamp}_classification.txt",
+    input: "assembly/sqanti/{sample}.gtf",
+           "assembly/sqanti/{sample}_classification.txt",
            "annotation/genes.gtf",
            "annotation/promoter.db.edp.bed"
     output:
-           "cia_assemblies/{sample}_samp_{subsamp}.end.corrected.assembly.gtf"
+           "cia_assemblies/{sample}.end.corrected.assembly.gtf"
     params:
         endGuides="/data/hilgers/group/alfonso/projects/2021_LRS_paper/data/cia_isoforms/clusters.rds/combined.rds.clusters.new.gff",
         refAnnot="/data/repository/organisms/dm6_ensembl/ensembl/release-96/genes.gtf",
         outDir="cia_assemblies",
-        prefix="{sample}_samp_{subsamp}",
-        refStops="assembly.subsampling/sqanti/{sample}_samp_{subsamp}/{sample}_samp_{subsamp}_classification.txt" # not so elegant
+        prefix="{sample}",
+        refStops="assembly/sqanti/{sample}/{sample}_classification.txt" # not so elegant
     threads: 20
     conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
     shell: """
     module load R/3.5.0
     Rscript ../../results/RDSguidedCorrection.R -a {input[0]}  -e {params.endGuides} -s {params.refStops}  -r {params.refAnnot} -o cia_assemblies -p {params.prefix}
     """
+    
