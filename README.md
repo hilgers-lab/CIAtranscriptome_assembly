@@ -1,6 +1,6 @@
 # CIAtranscriptome_assembly
 
-Snakefile illsutrate all the steps taken to reconstruct the CIA transcriptome assembly as in (Alfonso-Gonzalez, 2022). 
+Snakefile pipeline of all the steps taken to reconstruct the CIA transcriptome assembly as in (Alfonso-Gonzalez, 2022). This pipeline is based on Drosophila genome. 
 
 ## Requirements 
 
