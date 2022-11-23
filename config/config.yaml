@@ -1,0 +1,30 @@
+
+# files will be symlinked from VALUE to annotation/KEY
+# e.g. from /path/to/genome.fa to annotation/genome.fa
+annotation: 
+  genome.fa: /path/to/genome.fa
+  transcriptome.gtf: /path/to/transcriptome.gtf
+  genome.chrom.sizes: /path/to/genome.chrom.sizes
+  promoter.db.edp.bed: db/promoter.db.edp.bed
+  combined.rds.clusters.new.gff: db/combined.rds.clusters.new.gff
+
+sample_types:
+  - ont-cdna
+  - ont-direct
+  - flam-seq
+  - iso-seq
+
+params:
+  flair_collapse_edp_tss:
+    ont-cdna: "--max_ends 5 -s 3"
+    ont-direct: "--max_ends 5 -s 2"
+    flam-seq: "--max_ends 5 -s 2"
+    iso-seq: "--max_ends 5 -s 2"
+
+from_bam:
+  - flam-seq
+
+from_fastq:
+  - ont-cdna
+  - ont-direct
+  - iso-seq
