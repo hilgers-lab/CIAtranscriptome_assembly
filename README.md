@@ -18,15 +18,17 @@ R dependencies:
 R Bioconductor: 
 
 * [GenomicRanges](https://bioconductor.org/packages/release/bioc/html/GenomicRanges.html) 
-* [pylranges](https://www.bioconductor.org/packages/release/bioc/html/plyranges.html)
+* [plyranges](https://www.bioconductor.org/packages/release/bioc/html/plyranges.html)
 * [BSgenome](https://www.rdocumentation.org/packages/BSgenome/versions/1.40.1/topics/getSeq-methods) 
 
 
-## Run 
+## Sample preparation 
 
-Pipeline takes as input FASTQ files obtained from long read sequencing experiments in a folder named FASTQ
+Samples should be specified in `config/units.tsv` specifying the sample ID, 
+path, and sample_type. Data files can be gzipped or raw FASTA or FASTQ files. 
 
-```
-snakemake -s CIAassembly_pipeline  
-```
+## Run
+
+Modify the snakemake command in `run.sh` to use parameters that are appropriate
+for your computing or cluster environment. Execute ./run.sh. 
 

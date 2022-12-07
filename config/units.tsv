@@ -1,0 +1,5 @@
+sample	path	sample_type
+w1118_heads_flam	test/flam-seq/w1118_heads_pooled.fq	flam-seq
+w1118_heads_isoseq	test/iso-seq/w1118_heads_iso_seq_pooled.hq.fasta.gz	iso-seq
+onp_1D_heads_pooled	test/ont-cdna/onp_1D_heads_pooled.fastq.gz	ont-cdna
+20200227_NanoporeRNA_Heads	test/ont-direct/20200227_NanoporeRNA_Heads_sample1.fastq.gz	ont-direct

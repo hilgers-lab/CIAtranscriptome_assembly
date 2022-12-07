@@ -3,8 +3,11 @@
 # e.g. from /path/to/genome.fa to annotation/genome.fa
 annotation: 
   genome.fa: /path/to/genome.fa
+  genes.gtf: /path/to/genes.gtf
   transcriptome.gtf: /path/to/transcriptome.gtf
   genome.chrom.sizes: /path/to/genome.chrom.sizes
+  sqanti.polya.list: /path/to/sqanti.polya.list
+  splice_junctions_filtered.tab: /path/to/splice_junctions_filtered.tab
   promoter.db.edp.bed: db/promoter.db.edp.bed
   combined.rds.clusters.new.gff: db/combined.rds.clusters.new.gff
 
@@ -21,10 +24,8 @@ params:
     flam-seq: "--max_ends 5 -s 2"
     iso-seq: "--max_ends 5 -s 2"
 
-from_bam:
-  - flam-seq
-
-from_fastq:
-  - ont-cdna
-  - ont-direct
-  - iso-seq
+mapper:
+  flam-seq: starlong
+  iso-seq: starlong
+  ont-cdna: minimap2
+  ont-direct: minimap2

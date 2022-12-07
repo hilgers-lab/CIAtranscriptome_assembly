@@ -1,21 +1,33 @@
 import pandas as pd
 from pathlib import Path
 
-sample_df = pd.read_table(
-    (Path(workflow.basedir) / "config/samples.tsv"), 
+metadata = pd.read_table(
+    (Path(workflow.basedir) / "config/units.tsv"), 
     dtype=str
     ).set_index(["sample"], drop=False)
 
-def get_sample_attr(df, sample_id, attribute):
-    return df[df["sample_id"] == sample_id][attribute].values[0]
+# Add a workspace_path variable pointing to 
+# data/file.fastq etc. 
+metadata['workspace_path'] = (metadata['path']
+    .map(lambda x: str(Path('data') / Path(x).name))
+)
 
-os.getcwd()
+# add mapper attribute to metadata from config file
+# either starlong or minimap2
+metadata['mapper'] = (metadata['sample_type']
+    .map(lambda x: config['mapper'][x])
+)
+
+def meta_attr(attr='path', df=metadata)
+    "Return a function taking wildcards and returning the 
+    given attribute, return the given in the metadata table."
+    def inner(wc):
+        return df[df['sample' == str(wc.sample)]][attr]
+    return inner
+
+print("Starting CIA assembly with metadata object: {}".format(metadata))
+
 localrules: all
-SAMPLE, = glob_wildcards("FASTQ/{sample}.fastq.gz")
-print(SAMPLE)
-sample=SAMPLE
-
-metadata = pd.read_csv('config/samples.tsv')
 
 rule all:
     input:
@@ -28,36 +40,55 @@ rule symlink_annotation:
     output: 
         "annotation/{annotation}"
     shell: 
-        "ln -s `readlink -f {input}` {output}"
+        "ln -fs `readlink -f {input}` {output}"
 
-rule symlink_fastq: 
+def _find_path(wc):
+    "Return the path of the file with the given basename wc.basename."
+    return metadata[metadata['workspace_path'].endswith(str(wc.basename))]
+
+
+rule symlink_data: 
     input: 
-        lambda wc: sample_df[]
+        _find_path
     output: 
-        "data/{sample}.fastq.gz"
+        "data/{basename}"
+    shell:
+        "ln -fs `readlink -f {input}` {output}"
 
-rule symlink_bam: 
+
+rule minimap_idx:
     input: 
-
-
-rule genome_idx:
-    input: 
-        "annotation/genome.fa"
+        target="annotation/genome.fa"
     output: 
-        "index/genome.mmi"
+        "index/minimap2/genome.mmi"
+    params:
+        extra="-k 14"
     threads: 
         16
-    shell: 
-        "minimap2 -t {threads} -k 14 -d {output} {input}"
+    wrapper: 
+        "v1.20.0/bio/minimap2/index"
 
-rule align:
+rule star_index:
     input:
-        fastq="data/{sample}.fastq.gz",
-        genome="annotation/genome.fa",
-        index="annotation/genome.mmi"
+        fasta="annotation/genome.fasta",
+        gtf="annotation/transcriptome.gtf"
     output:
-        bam="minimap2/{sample}.bam",
-        bai="minimap2/{sample}.bam.bai"
+        directory("index/star"),
+    threads: 16
+    params:
+        extra="--genomeSAindexNbases 12",
+    log:
+        "logs/star_index.log",
+    wrapper:
+        "v1.20.0/bio/star/index"
+
+rule minimap_align:
+    input:
+        fastq=
+        genome="annotation/genome.fa",
+        index="index/minimap2/genome.mmi"
+    output:
+        bam="mapping/minimap2/{sample}.bam",
     threads: 
         16
     env: 
@@ -68,14 +99,69 @@ rule align:
         "{input.genome} "
         "{input.fastq} | "
         "samtools sort -@ {threads} -o {output.bam} -; "
-        "samtools index {output.bam}"
+
+def _to_zcat(wc):
+    "If sample ends with gz, then add zcat"
+    sample_path = metadata[metadata['sample'] == wc.sample]['path']
+    if sample_path.endswith('gz'):
+        return '--readFilesCommand zcat'
+    else:
+        return ''
+
+rule starlong_align: 
+    input: 
+        data=meta_attr,
+        genome="index/star"
+    output: 
+        'mapping/starlong/{sample}.bam'
+    conda: 
+        "envs/star.yaml"
+    threads: 16
+    params: 
+        zcat=_to_zcat,
+        prefix='mapping/starlong/{sample}'
+    shell: 
+        "STARlong --genomeDir {input.genome} "
+        "--readFilesIn {input.data} "
+        "--outFileNamePrefix {params.prefix} "
+        "--runThreadN {threads} "
+        "--outFilterMultimapScoreRange 20 "
+        "--outFilterScoreMinOverLread 0 "
+        "--outFilterMatchNminOverLread 0.66 "
+        "--outFilterMismatchNmax 1000 "
+        "--winAnchorMultimapNmax 200 "
+        "--seedSearchStartLmax 12 "
+        "--seedPerReadNmax 100000 "
+        "--seedPerWindowNmax 100 "
+        "--alignTranscriptsPerReadNmax 100000 "
+        "--alignTranscriptsPerWindowNmax 10000 "
+        "--outSAMtype BAM SortedByCoordinate "
+        "{params.zcat}; "
+
+rule samtools_index:
+    input:
+        "{prefix}.bam",
+    output:
+        "{prefix}.bam.bai",
+    params:
+        extra="",  # optional params string
+    threads: 4  # This value - 1 will be sent to -@
+    wrapper:
+        "v1.20.0/bio/samtools/index"
+
+def _get_mapper_path(wc):
+    "Given the sample, return either mapping/minimap2/{sample}.bam"
+    "or mapping/starlong/{sample}.bam"
+    
+
 
 rule bam2bed12minimap2:
     input: 
-        bam="minimap2/{sample}.bam",
+        bam="mapping/minimap2/{sample}.bam",
+        bai="mapping/minimap2/{sample}.bam.bai"
         genome="annotation/genome.fa"
     output:
-        "minimap2/{sample}.classified.bed"
+        "bed/{sample}.classified.bed"
     threads: 16
     conda: 
         "envs/flair.yaml"
@@ -84,13 +170,13 @@ rule bam2bed12minimap2:
 
 rule flair_correct:
     input: 
-        bed="minimap2/{sample}.classified.bed",
+        bed="bed/{sample}.classified.bed",
         genome="annotation/genome.fa",
         chrom_sizes="annotation/genome.chrom.sizes"
         gtf="annotation/transcriptome.gtf",
     output:
         "assembly/flair/{sample}_all_corrected.psl"
-    params:
+    params:W
         outDir="assembly/flair/{sample}"
     threads: 16
     conda: 
@@ -149,40 +235,61 @@ rule flair_collapse_edp_tss:
         "{params.cmdline_params}; " # i.e. -s 2 or -s 3
         "rm -rf {params.tempdir}"
 
-rule sqanty_qc_normal:
+rule sqanti_download: 
+    output: "src/sqanti/sqanti3_qc.py"
+    params:
+        outdir="src/sqanti",
+        commit="5e52b85fc62474557b45618e054b07dfef580eb1"
+    shell: 
+        """
+        git clone https://github.com/ConesaLab/SQANTI3 {params.outdir}
+        cd {params.outdir}
+        git reset --hard {params.commit}
+        """
+
+rule sqanti_qc_normal:
     input: 
         gtf="assembly/flair/{sample}_collapsed_annot.edp.tss/{sample}.isoforms.gtf",
-        gtf_anno="/data/genes.gtf",
-        polya_list="/data/sqanti.polya.list",
-        junctions_filtered="/data/splice_junctions_filtered.tab"
+        gtf_anno="annotation/transcriptome.gtf",
+        genome="annotation/genome.fa"
+        polya_list="annotation/sqanti.polya.list",
+        junctions_filtered="annotations/splice_junctions_filtered.tab",
+        sqanti="src/sqanti/sqanti3_qc.py"
     output:
            "assembly/sqanti/{sample}_collapsed_annot.edp.tss/{sample}.sqanti_corrected.gtf"
     params:
-        gnome="/data/genome.fa",
         outDir="assembly/sqanti/{sample}_collapsed_annot.edp.tss/",
         prefix="{sample}.sqanti",
         internalPrimingWindow=50
-    threads: 20
-    shell: """
-    module load minimap2
-    python sqanti3_qc.py --gtf {input[0]}  {input[1]}  {params.gnome} -o {params.prefix} -d {params.outDir} -w {params.internalPrimingWindow}  --polyA_motif_list {input[4]} -c {input[5]}
+    threads: 16
+    conda: 
+        "envs/sqanti.yaml"
+    shell: 
+        "python {input.sqanti} "
+        "--gtf {input.gtf}  {input.gtf_anno}  {input.genome} "
+        "-o {params.prefix} "
+        "-d {params.outDir} "
+        "-w {params.internalPrimingWindow} "
+        "--polyA_motif_list {input.polya_list} "
+        "-c {input.junctions_filtered}"
 
-    """
 rule endCorrection:
-    input: "assembly/sqanti/{sample}.gtf",
-           "assembly/sqanti/{sample}_classification.txt",
-           "annotation/genes.gtf",
-           "annotation/promoter.db.edp.bed"
+    input: 
+        "assembly/sqanti/{sample}.gtf",
+        "assembly/sqanti/{sample}_classification.txt",
+        "annotation/genes.gtf",
+        "annotation/promoter.db.edp.bed"
     output:
-           "cia_assemblies/{sample}.end.corrected.assembly.gtf"
+        "cia_assemblies/{sample}.end.corrected.assembly.gtf"
     params:
-        endGuides="/annotation/combined.rds.clusters.new.gff",
-        refAnnot="/annotation/genes.gtf",
+        endGuides="annotation/combined.rds.clusters.new.gff",
+        refAnnot="annotation/transcriptome.gtf",
         outDir="cia_assemblies",
         prefix="{sample}",
         refStops="assembly/sqanti/{sample}/{sample}_classification.txt" # not so elegant
-    threads: 20
-    conda: "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
+    threads: 16
+    conda: 
+        "/data/hilgers/group/alfonso/projects/LongReadSeq/bin/flair/misc/flair_conda_env.yaml"
     shell: """
     module load R/3.5.0
     Rscript R/RDSguidedCorrection.R -a {input[0]}  -e {params.endGuides} -s {params.refStops}  -r {params.refAnnot} -o cia_assemblies -p {params.prefix}
