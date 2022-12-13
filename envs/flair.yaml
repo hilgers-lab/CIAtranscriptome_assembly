@@ -1,13 +1,11 @@
 channels:
-  - bioconda
-  - conda
-  - Quantopian
   - conda-forge
+  - bioconda
   - r
+  - defaults
 dependencies:
-  - python=3.6.5   # or 2.7
-  - numpy=1.9.*
-  - Cython
+  - python >=3.6
+  - numpy
   - pandas
   - rpy2
   - tqdm
@@ -17,17 +15,13 @@ dependencies:
   - pybedtools
   - minimap2
   - intervaltree
-  - pysam
-  - R
-  - r-ggplot2=2.2.1
+  - pysam >=0.16.0
+  - r-ggplot2
   - r-qqman
-  - bioconductor-deseq2
   - bioconductor-deseq2
   - bioconductor-drimseq
   - bioconductor-stager
-  - matplotlib
+  - matplotlib-base
   - seaborn
+  - kerneltree
   - pip
-  - pip:
-    - kerneltree
-    - "--editable=git+https://github.com/BrooksLabUCSC/flair.git@8c0d34291aaafec00e02eaa71cc2a242790a0fcc#egg=flair"

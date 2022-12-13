@@ -4,3 +4,4 @@ channels:
   - defaults
 dependencies:
   - star=2.7.10a
+  - snakemake
