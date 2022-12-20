@@ -27,6 +27,14 @@ R Bioconductor:
 Samples should be specified in `config/units.tsv` specifying the sample ID, 
 path, and sample_type. Data files can be gzipped or raw FASTA or FASTQ files. 
 
+## Before you run
+
+Make sure you have conda installed, then run `conda create -n snakemake-cia -c conda-forge -c bioconda -c defaults snakemake` 
+to create the pipeline environment. 
+
+Edit `config/config.yaml` to reflect the parameters you would like to use to run the pipeline, as well as
+`config/units.tsv` to specify the sample `path` and `sample_type` -- one of `flam-seq`, `iso-seq`, `ont-cdna`, or `ont-direct`.
+
 ## Run
 
 Modify the snakemake command in `run.sh` to use parameters that are appropriate
