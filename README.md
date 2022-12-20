@@ -34,5 +34,5 @@ for your computing or cluster environment. Execute ./run.sh.
 
 ## Testing
 
-You can download a test dataset, for which the `config/units.tsv` is already configured. Run `tar -xzvf test.tar.gz` in this directory and run the pipeline using ./run.sh. 
+You can download a test dataset, for which the `config/units.tsv` is already configured, from Zenodo [here](https://doi.org/10.5281/zenodo.7438383). Run `tar -xzvf test.tar.gz` in this directory and run the pipeline using ./run.sh. 
 
