@@ -32,3 +32,7 @@ path, and sample_type. Data files can be gzipped or raw FASTA or FASTQ files.
 Modify the snakemake command in `run.sh` to use parameters that are appropriate
 for your computing or cluster environment. Execute ./run.sh. 
 
+## Testing
+
+You can download a test dataset, for which the `config/units.tsv` is already configured. Run `tar -xzvf test.tar.gz` in this directory and run the pipeline using ./run.sh. 
+
