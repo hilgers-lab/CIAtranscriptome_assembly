@@ -4,18 +4,25 @@ Snakefile pipeline of all the steps taken to reconstruct the CIA transcriptome a
 
 ## Requirements 
 
-Packages dependencies:
+All package dependencies are downloaded using conda, with the exception of SQANTI and FLAIR which are installed during the pipeline run using specific github commits. 
+
+Before running, make sure you have conda installed, then run `conda create -n snakemake-cia -c conda-forge -c bioconda -c defaults snakemake` 
+to create the pipeline environment. Then run snakemake with `--use-conda` to automatically create the environments during the pipeline run. 
+
+Briefly, dependencies are listed here. 
+
+### Packages dependencies:
 
 * [FLAIR.V1.1](https://github.com/BrooksLabUCSC/flair/tree/v1.0)
 * [SQANTI3](https://github.com/ConesaLab/SQANTI3)
 * [minimap2](https://github.com/lh3/minimap2)
 
-R dependencies: 
+### R dependencies: 
 
 * [optparse](https://cran.r-project.org/web/packages/optparse/index.html)  
 * [tidyverse](https://tidyverse.tidyverse.org/) 
 
-R Bioconductor: 
+### R Bioconductor: 
 
 * [GenomicRanges](https://bioconductor.org/packages/release/bioc/html/GenomicRanges.html) 
 * [plyranges](https://www.bioconductor.org/packages/release/bioc/html/plyranges.html)
@@ -28,9 +35,6 @@ Samples should be specified in `config/units.tsv` specifying the sample ID,
 path, and sample_type. Data files can be gzipped or raw FASTA or FASTQ files. 
 
 ## Before you run
-
-Make sure you have conda installed, then run `conda create -n snakemake-cia -c conda-forge -c bioconda -c defaults snakemake` 
-to create the pipeline environment. 
 
 Edit `config/config.yaml` to reflect the parameters you would like to use to run the pipeline, as well as
 `config/units.tsv` to specify the sample `path` and `sample_type` -- one of `flam-seq`, `iso-seq`, `ont-cdna`, or `ont-direct`.
