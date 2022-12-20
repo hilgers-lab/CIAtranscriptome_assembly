@@ -29,15 +29,11 @@ Briefly, dependencies are listed here.
 * [BSgenome](https://www.rdocumentation.org/packages/BSgenome/versions/1.40.1/topics/getSeq-methods) 
 
 
-## Sample preparation 
-
-Samples should be specified in `config/units.tsv` specifying the sample ID, 
-path, and sample_type. Data files can be gzipped or raw FASTA or FASTQ files. 
-
 ## Before you run
 
 Edit `config/config.yaml` to reflect the parameters you would like to use to run the pipeline, as well as
 `config/units.tsv` to specify the sample `path` and `sample_type` -- one of `flam-seq`, `iso-seq`, `ont-cdna`, or `ont-direct`.
+Data files can be gzipped or raw FASTA or FASTQ files. 
 
 ## Run
 
