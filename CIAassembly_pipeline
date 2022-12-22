@@ -367,9 +367,9 @@ rule sqanti_qc_normal:
         cupcake=relative_to_basedir("src/cDNA_Cupcake", basedir='workdir'),
         internalPrimingWindow=50,
     resources: 
-        mem_mb=24000
+        mem_mb=40000
     benchmark:
-        "benchmark/sqanti/{sample}_benchmark.txt"
+        "benchmarks/sqanti/{sample}_benchmark.txt"
     threads: 16
     conda: 
         'cia-sqanti'
@@ -378,13 +378,18 @@ rule sqanti_qc_normal:
         "export PATH=$PATH:{params.cupcake}/rarefaction/; "
         "export PYTHONPATH={params.cupcake}/sequence/; "
         "echo $PYTHONPATH; "
+        "if [ -d {params.outDir} ]; then "
+        "   rm -rf {params.outDir}; "
+        "fi; "
         "python {input.sqanti} "
         "--gtf {input.gtf} {input.gtf_anno}  {input.genome} "
         "-o {params.prefix} "
         "-d {params.outDir} "
+        "--force_id_ignore "
         "-w {params.internalPrimingWindow} "
         "--polyA_motif_list {input.polya_list} "
         "-c {input.junctions_filtered} "
+        "|| exit 0"
 
 rule endCorrection:
     input: 
@@ -398,11 +403,12 @@ rule endCorrection:
         outDir="cia_assemblies",
         prefix="{sample}",
         R_script=relative_to_basedir('R/RDSFLAM.endGuidedCorrection.R'),
+        R_source=relative_to_basedir('R/CIAmethods_source.R'),
     threads: 16
     resources:
         mem_mb=24000
     benchmark:
-        "benchmark/end_correction/{sample}_benchmark.txt"
+        "benchmarks/end_correction/{sample}_benchmark.txt"
     conda: 
         "envs/end_correction.yaml"
     shell: 
@@ -413,6 +419,7 @@ rule endCorrection:
         "-r {input.txannot} "
         "-o {params.outDir} "
         "-p {params.prefix} "
+        "-c {params.R_source} "
 
 # annotFile <-  "/data/processing1/alfonso/rerunAssembly/cdna_seq/cia_isoforms/cia_assemblies/heads_cia_assembly/cia_heads.all.seqs.gtf"
 # LongEndsFile <-"data/cia_isoforms/clusters.rds/combined.rds.clusters.new.gff"

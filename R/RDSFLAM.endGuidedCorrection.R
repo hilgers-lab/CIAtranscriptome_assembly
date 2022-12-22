@@ -1,7 +1,7 @@
 # Correct long read assemblies using 3'end database 
 #################################################################
 suppressPackageStartupMessages(library("optparse"))
-source("CIAmethods_source.R")
+#source("CIAmethods_source.R")
 # specify our desired options in a list
 # by default OptionParser will add an help option equivalent to 
 # make_option(c("-h", "--help"), action="store_true", default=FALSE, 
@@ -18,7 +18,9 @@ option_list <- list(
   make_option(c("-o", "--outDir"), type="character",
               help = "ref annotation in ensembl format"),
   make_option(c("-p", "--prefix"), type="character",
-              help = "ref annotation in ensembl format")
+              help = "ref annotation in ensembl format"),
+  make_option(c("-c", "--ciaMethods"), type="character",
+	      help = "path to CIAmethods_source.R")
 )
 
 # get command line options, if help option encountered print help and exit,
@@ -26,6 +28,8 @@ option_list <- list(
 opt <- parse_args(OptionParser(option_list=option_list))
 print(opt)
 options(stringsAsFactors = FALSE)
+
+source(opt$ciaMethods)
 
 gRanges23UTR100nt <- function(grset){
   pos <- grset[grset@strand=="+"]
