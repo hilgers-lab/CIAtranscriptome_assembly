@@ -47,3 +47,14 @@ Execute `./run.sh`.
 
 You can download a test dataset, for which the `config/units.tsv` is already configured, from Zenodo [here](https://doi.org/10.5281/zenodo.7438383). Run `tar -xzvf test.tar.gz` in this directory and run the pipeline using `./run.sh`. 
 
+## Troubleshooting
+
+Occasionally there can be an issue installing R packages in the `cia-sqanti`
+environment. This will manifest in an error like this: 
+
+```
+Error in if (nzchar(SHLIB_LIBADD)) SHLIB_LIBADD else character() : 
+argument is of length zero
+```
+
+if you run into this error, follow the instructions from [this thread](https://stackoverflow.com/questions/53813323/installing-r-packages-in-macos-mojave-error-in-if-nzcharshlib-libadd/54778735?stw=2#54778735).

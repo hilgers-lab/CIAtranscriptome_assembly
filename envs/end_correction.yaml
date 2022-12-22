@@ -1,0 +1,22 @@
+channels:
+  - conda-forge
+  - bioconda
+  - r
+  - defaults
+dependencies:
+  - r-optparse
+  - bioconductor-rtracklayer
+  - r-dplyr
+  - bioconductor-genomicfeatures
+  - r-ggplot2
+  - r-ggpubr
+  - r-reshape2
+  - r-tidyverse
+  - bioconductor-genomicranges
+  - r-stringr
+  - bioconductor-tximport
+  - bioconductor-biostrings
+  - bioconductor-bsgenome.dmelanogaster.ucsc.dm6
+  - r-rcolorbrewer
+  - r-data.table
+  - r-upsetr

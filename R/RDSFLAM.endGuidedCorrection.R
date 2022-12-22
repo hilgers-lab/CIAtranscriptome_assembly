@@ -1,7 +1,7 @@
 # Correct long read assemblies using 3'end database 
 #################################################################
 suppressPackageStartupMessages(library("optparse"))
-source("/data/hilgers/group/alfonso/projects/2021_LRS_paper/results/metaCIASource.R")
+source("CIAmethods_source.R")
 # specify our desired options in a list
 # by default OptionParser will add an help option equivalent to 
 # make_option(c("-h", "--help"), action="store_true", default=FALSE, 

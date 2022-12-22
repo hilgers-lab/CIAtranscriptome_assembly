@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from pathlib import Path
 
 metadata = pd.read_table(
@@ -6,12 +7,18 @@ metadata = pd.read_table(
     dtype=str
     ).set_index(["sample"], drop=False)
 
-def relative_to_basedir(path):
+def relative_to_basedir(path, basedir='basedir'):
     path = Path(path)
     if path.is_absolute():
         return str(path)
     else: 
-        return str((Path(workflow.basedir) / Path(path)).resolve())
+        if basedir == 'basedir':
+            base = Path(str(workflow.basedir))
+        elif basedir == 'workdir':
+            base = Path(os.getcwd())
+        else:
+            raise Exception('Must specify basedir or workdir.')
+        return str((base / Path(path)).resolve())
 
 # Convert relative paths to absolute path relative to workflow basedir
 metadata['path'] = metadata['path'].map(relative_to_basedir)
@@ -40,11 +47,11 @@ def meta_attr(attrib='path', df=metadata):
 
 print("Starting CIA assembly with metadata object: {}".format(metadata))
 
-localrules: all
+localrules: all, samtools_index
 
 rule all:
     input:
-        expand("assembly/flair/{sample}_collapsed_annot.edp.tss/{sample}.isoforms.gtf", 
+        expand("cia_assemblies/{sample}.end.corrected.assembly.gtf", 
         sample=list(metadata['sample']))
 
 def _find_annotation(wc):
@@ -124,7 +131,7 @@ rule minimap_align:
         "-ax splice -uf "
         "{input.genome} "
         "{input.fastq} | "
-        "samtools sort -@ {threads} -T $TMPDIR/{sample} -o {output.bam} -; "
+        "samtools sort -@ {threads} -T $TMPDIR/{wildcards.sample} -o {output.bam} -; "
 
 def _to_zcat(wc):
     "If sample ends with gz, then add zcat"
@@ -188,7 +195,7 @@ rule bam2bed12minimap2:
     conda: 
         "envs/flair.yaml"
     shell: 
-        "echo `which python`; python {input.bam2bed} -i {input.bam} > {output}"
+        "python {input.bam2bed} -i {input.bam} > {output}"
 
 rule flair_correct:
     input: 
@@ -283,13 +290,62 @@ rule sqanti_download:
         commit="5e52b85fc62474557b45618e054b07dfef580eb1"
     shell: 
         """
+        if [ -d "{params.outdir}" ]; then
+            rm -rf {params.outdir};
+        fi;
         git clone https://github.com/ConesaLab/SQANTI3 {params.outdir}
         cd {params.outdir}
         git reset --hard {params.commit}
         """
 
 
+# necessary since we install from an explicit environment
+rule sqanti_env:
+    output: "flags/sqanti_env.done"
+    params: 
+        sqanti_env=relative_to_basedir('envs/sqanti.txt')
+    shell:
+        """
+        eval "$(conda shell.bash hook)"
+        conda create --file {params.sqanti_env} --name cia-sqanti
+        touch {output}
+        """
 
+rule sqanti_env_pip: 
+    input: "flags/sqanti_env.done"
+    output: touch("flags/sqanti_env_pip.done")
+    conda: "cia-sqanti"
+    shell: 
+        """
+        pip install bx-python==0.8.8
+        pip install sklearn==0.0
+        """
+
+rule sqanti_env_cupcake: 
+    input: "flags/sqanti_env.done"
+    output: touch("flags/cupcake.done")
+    conda: 'cia-sqanti'
+    params:
+        outdir="src/cDNA_Cupcake",
+    shell:
+        """
+        if [ -d "{params.outdir}" ]; then \
+            rm -rf {params.outdir}; \
+        fi; 
+        git clone https://github.com/Magdoll/cDNA_Cupcake.git {params.outdir}
+        cd {params.outdir}
+        python setup.py build
+        python setup.py install
+        """
+
+rule gtf_to_gene_pred: 
+    input: "flags/sqanti_env.done"
+    output: "src/sqanti/utilities/gtfToGenePred"
+    shell: 
+        """
+        wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/gtfToGenePred -O {output}
+        chmod +x {output} 
+        """
 
 rule sqanti_qc_normal:
     input: 
@@ -297,18 +353,31 @@ rule sqanti_qc_normal:
         gtf_anno="annotation/transcriptome.gtf",
         genome="annotation/genome.fasta",
         polya_list="annotation/sqanti.polya.list",
-        junctions_filtered="annotations/splice_junctions_filtered.tab",
+        junctions_filtered="annotation/splice_junctions_filtered.tab",
         sqanti="src/sqanti/sqanti3_qc.py",
+        flag="flags/sqanti_env_pip.done",
+        cupcake_flag="flags/cupcake.done",
+        gtftogenepred="src/sqanti/utilities/gtfToGenePred",
     output:
-           "assembly/sqanti/{sample}_collapsed_annot.edp.tss/{sample}.sqanti_corrected.gtf"
+        gtf="assembly/sqanti/{sample}_collapsed_annot.edp.tss/{sample}.sqanti_corrected.gtf",
+        classifxn="assembly/sqanti/{sample}_collapsed_annot.edp.tss/{sample}.sqanti_classification.txt"
     params:
         outDir="assembly/sqanti/{sample}_collapsed_annot.edp.tss/",
         prefix="{sample}.sqanti",
+        cupcake=relative_to_basedir("src/cDNA_Cupcake", basedir='workdir'),
         internalPrimingWindow=50,
+    resources: 
+        mem_mb=24000
+    benchmark:
+        "benchmark/sqanti/{sample}_benchmark.txt"
     threads: 16
     conda: 
-        "envs/sqanti.yaml"
+        'cia-sqanti'
     shell: 
+        "export PATH=$PATH:{params.cupcake}/sequence/; "
+        "export PATH=$PATH:{params.cupcake}/rarefaction/; "
+        "export PYTHONPATH={params.cupcake}/sequence/; "
+        "echo $PYTHONPATH; "
         "python {input.sqanti} "
         "--gtf {input.gtf} {input.gtf_anno}  {input.genome} "
         "-o {params.prefix} "
@@ -319,23 +388,34 @@ rule sqanti_qc_normal:
 
 rule endCorrection:
     input: 
-        "assembly/sqanti/{sample}.gtf",
-        "assembly/sqanti/{sample}_classification.txt",
-        "annotation/transcriptome.gtf",
-        "annotation/promoter.db.edp.bed",
+        endGuides="annotation/combined.rds.clusters.new.gff",
+        annot="assembly/sqanti/{sample}_collapsed_annot.edp.tss/{sample}.sqanti_corrected.gtf",
+        classifxn="assembly/sqanti/{sample}_collapsed_annot.edp.tss/{sample}.sqanti_classification.txt",
+        txannot="annotation/transcriptome.gtf",
     output:
         "cia_assemblies/{sample}.end.corrected.assembly.gtf"
     params:
-        endGuides="annotation/combined.rds.clusters.new.gff",
-        refAnnot="annotation/transcriptome.gtf",
         outDir="cia_assemblies",
         prefix="{sample}",
-        refStops="assembly/sqanti/{sample}/{sample}_classification.txt", # not so elegant
+        R_script=relative_to_basedir('R/RDSFLAM.endGuidedCorrection.R'),
     threads: 16
+    resources:
+        mem_mb=24000
+    benchmark:
+        "benchmark/end_correction/{sample}_benchmark.txt"
     conda: 
-        "envs/flair.yaml"
+        "envs/end_correction.yaml"
     shell: 
-        """
-        module load R/3.5.0
-        Rscript R/RDSguidedCorrection.R -a {input[0]}  -e {params.endGuides} -s {params.refStops}  -r {params.refAnnot} -o cia_assemblies -p {params.prefix}
-        """
+        "Rscript {params.R_script} "
+        "-a {input.annot} "
+        "-e {input.endGuides} "
+        "-s {input.classifxn} "
+        "-r {input.txannot} "
+        "-o {params.outDir} "
+        "-p {params.prefix} "
+
+# annotFile <-  "/data/processing1/alfonso/rerunAssembly/cdna_seq/cia_isoforms/cia_assemblies/heads_cia_assembly/cia_heads.all.seqs.gtf"
+# LongEndsFile <-"data/cia_isoforms/clusters.rds/combined.rds.clusters.new.gff"
+# sqantiClass <- "/data/processing1/alfonso/rerunAssembly/cdna_seq/cia_isoforms/cia_assemblies/heads_cia_assembly/sqanti/cia_heads.all.seqs.sqanti_classification.txt"
+# ensAnnotFile <- "/data/repository/organisms/dm6_ensembl/ensembl/release-96/genes.gtf"
+

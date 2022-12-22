@@ -21,6 +21,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
         "--seedPerWindowNmax 100 "
         "--alignTranscriptsPerReadNmax 100000 "
         "--alignTranscriptsPerWindowNmax 10000 "
+        "--outSAMtype BAM SortedByCoordinate "
         "--outStd BAM_SortedByCoordinate "
         "{snakemake.params.zcat} > {snakemake.output}; "
     )
