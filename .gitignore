@@ -1,3 +1,17 @@
 test/
 data/
 workspace/*
+test.tar.gz
+
+# sphinx build folder
+_build
+_modules
+_sources
+
+/.snakemake
+tmp
+.Rproj.user
+*~
+*.pyc
+dist
+build
