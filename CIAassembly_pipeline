@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from pathlib import Path
+import sys
 
 metadata = pd.read_table(
     (Path(workflow.basedir) / "config/units.tsv"), 
@@ -38,14 +39,12 @@ metadata['mapper'] = (metadata['sample_type']
 def meta_attr(attrib='path', df=metadata):
     "Return a function taking wildcards and returning the "
     "given attribute, return the given in the metadata table."
-    print("outer")
     def inner(wc):
         ans = df.loc[str(wc.sample), attrib]
-        print(ans)
         return ans # df.loc[str(wc.sample), attrib]
     return inner
 
-print("Starting CIA assembly with metadata object: {}".format(metadata))
+print("Starting CIA assembly with metadata object: {}".format(metadata), file=sys.stderr)
 
 localrules: all, samtools_index
 
