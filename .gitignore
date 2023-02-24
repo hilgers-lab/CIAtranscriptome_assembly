@@ -15,3 +15,7 @@ tmp
 *.pyc
 dist
 build
+
+db/dm6_ensembl/
+.env-created
+workspace-test/

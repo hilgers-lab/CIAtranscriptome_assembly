@@ -2,11 +2,11 @@
 # files will be symlinked from VALUE to annotation/KEY
 # e.g. from /path/to/genome.fa to annotation/genome.fa
 annotation: 
-  genome.fasta: /path/to/genome.fasta
-  transcriptome.gtf: /path/to/transcriptome.gtf
-  genome.chrom.sizes: /path/to/genome.chrom.sizes
-  sqanti.polya.list: /path/to/sqanti.polya.list
-  splice_junctions_filtered.tab: /path/to/splice_junctions_filtered.tab
+  genome.fasta: db/dm6_ensembl/genome.fa
+  transcriptome.gtf: db/dm6_ensembl/release-96-genes.gtf
+  genome.chrom.sizes: db/dm6_ensembl/genome.chrom.sizes
+  sqanti.polya.list: db/sqanti.polya.list
+  splice_junctions_filtered.tab: db/splice_junctions_filtered.tab
   promoter.db.edp.bed: db/promoter.db.edp12.bed # from https://academic.oup.com/nar/article/48/D1/D65/5611668, personal communication
   combined.rds.clusters.new.gff: db/combined.rds.clusters.new.gff
 
@@ -28,3 +28,6 @@ mapper:
   iso-seq: starlong
   ont-cdna: minimap2
   ont-direct: minimap2
+
+sqanti_git_hash: 5e52b85fc62474557b45618e054b07dfef580eb1
+

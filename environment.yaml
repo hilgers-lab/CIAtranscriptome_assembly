@@ -1,0 +1,9 @@
+name: snakemake-cia
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - snakemake
+  - ucsc-twobitinfo
+  - ucsc-fatotwobit
