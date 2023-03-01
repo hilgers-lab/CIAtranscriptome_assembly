@@ -148,6 +148,8 @@ to correct the SQANTI-annotated isoforms. These are specified either in
 
 **TODO ask Carlos about chicken and egg problem**
 
+.. image:: _static/yourimage.png
+
 
 Indices and tables
 ==================
