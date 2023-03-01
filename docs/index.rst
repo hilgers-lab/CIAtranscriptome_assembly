@@ -136,7 +136,7 @@ Pipeline overview
    using genome annotations. 
 #. FLAIR is used to collapse corrected reads into high-confidence isoforms. 
 #. The ``R/RDSFLAM.endGuidedCorrection.R`` is used to correct the ends using
-Nanopore direct RNA-seq or FLAM-seq data. 
+   Nanopore direct RNA-seq or FLAM-seq data. 
 
 Please refer to the STAR Methods in Alfonso-Gonzalez et al. for further details.
 
