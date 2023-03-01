@@ -286,7 +286,7 @@ rule sqanti_download:
     output: "src/sqanti/sqanti3_qc.py"
     params:
         outdir="src/sqanti",
-        commit="5e52b85fc62474557b45618e054b07dfef580eb1"
+        commit=config["sqanti_git_hash"],
     shell: 
         """
         if [ -d "{params.outdir}" ]; then
@@ -306,7 +306,9 @@ rule sqanti_env:
     shell:
         """
         eval "$(conda shell.bash hook)"
-        conda create --file {params.sqanti_env} --name cia-sqanti
+        if ! `conda env list | grep cia-sqanti >/dev/null 2>/dev/null`; then
+            conda create --file {params.sqanti_env} --name cia-sqanti
+        fi;
         touch {output}
         """
 
@@ -400,7 +402,6 @@ rule endCorrection:
         "cia_assemblies/{sample}.end.corrected.assembly.gtf"
     params:
         outDir="cia_assemblies",
-        prefix="{sample}",
         R_script=relative_to_basedir('R/RDSFLAM.endGuidedCorrection.R'),
         R_source=relative_to_basedir('R/CIAmethods_source.R'),
     threads: 16
@@ -417,7 +418,7 @@ rule endCorrection:
         "-s {input.classifxn} "
         "-r {input.txannot} "
         "-o {params.outDir} "
-        "-p {params.prefix} "
+        "-p {wildcards.sample} "
         "-c {params.R_source} "
 
 # annotFile <-  "/data/processing1/alfonso/rerunAssembly/cdna_seq/cia_isoforms/cia_assemblies/heads_cia_assembly/cia_heads.all.seqs.gtf"

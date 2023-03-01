@@ -16,9 +16,9 @@ option_list <- list(
   make_option(c("-r", "--refannot"), type="character",
               help = "ref annotation in ensembl format"),
   make_option(c("-o", "--outDir"), type="character",
-              help = "ref annotation in ensembl format"),
+              help = "Output directory."),
   make_option(c("-p", "--prefix"), type="character",
-              help = "ref annotation in ensembl format"),
+              help = "Sample prefix of the output. Corresponds to {sample}."),
   make_option(c("-c", "--ciaMethods"), type="character",
 	      help = "path to CIAmethods_source.R")
 )
