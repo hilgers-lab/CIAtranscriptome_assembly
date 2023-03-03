@@ -101,18 +101,18 @@ In addition to the canonical annotation files,
 several additional files play a critical role in the correction and 
 filtering of long read sequencing assemblies: 
 
-#.	combined.rds.clusters.new.gff: contains the highly confident positions 
+#.	``combined.rds.clusters.new.gff`` contains the highly confident positions 
    of 3´ ends. This file serves as an essential component of the pipeline, 
    as it guides the 3´-UTR correction and filtering process. The generation 
    of the database steps and quality metrics is explained in detailed 
    in this vignette [INSERT LINK]. This file can be replaced depending on the organism.  
-#.	promoter.db.edp12.bed: serves as a reference database indicating the 
+#.	``promoter.db.edp12.bed`` serves as a reference database indicating the 
    locations of validated transcription start sites. This file is utilized 
    during the FLAIR assembly step to guide the filtering of isoforms resulting 
    from sequencing artifacts occurring at the 5´ end of the isoforms.
-#.	splice_junctions_filtered.tab: is required for FLAIR assembly to 
+#.	``splice_junctions_filtered.tab`` is required for FLAIR assembly to 
    correct long reads for possible base mismatches and refine exon boundaries. 
-#.	sqanti.polya.list contains a list of poly(A) hexamers that are scanned 
+#.	``sqanti.polya.list`` contains a list of poly(A) hexamers that are scanned 
    during the sqanti qc step. This list is relevant for the classification of 
    real 3´ ends of the assemblies.
 
@@ -170,8 +170,8 @@ The subsequent filtering parameters were implemented:
    were only retained if they were located within the reference annotation and harbored an 
    AATAAA signal. To correct 3ʹ ends, we initially created 3ʹ untranslated region (UTR) bins 
    using the PAS database, which were established from the end of the open reading frame 
-   to the most distal PAS, between each consecutive PAS. Subsequently, isoform 3ʹ ends 
-   located within the final bin of the 3ʹ UTR (between the two distal-most PASs) 
+   to the most distal PAS, between each consecutive PAS. 
+#. Isoform 3ʹ ends located within the final bin of the 3ʹ UTR (between the two distal-most PASs) 
    were corrected to the most distal bin, provided that the isoform covered greater than 10% of the last bin.
 
 .. 
