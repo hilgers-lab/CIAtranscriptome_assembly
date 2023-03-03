@@ -94,9 +94,12 @@ documented will generate the required ``genome.chrom.sizes`` file:
 These tools are installed into the `cia-snakemake` environment upon
 environment creation. 
 
-In addition to the canonical annotation files, several additional files 
-play a critical role in the correction and filtering of long read 
-sequencing assemblies: 
+Custom annotations
+------------------
+
+In addition to the canonical annotation files, 
+several additional files play a critical role in the correction and 
+filtering of long read sequencing assemblies: 
 
 #.	combined.rds.clusters.new.gff: contains the highly confident positions 
    of 3´ ends. This file serves as an essential component of the pipeline, 
