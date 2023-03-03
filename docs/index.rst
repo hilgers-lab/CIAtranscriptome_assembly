@@ -101,22 +101,25 @@ In addition to the canonical annotation files,
 several additional files play a critical role in the correction and 
 filtering of long read sequencing assemblies: 
 
-#.	``combined.rds.clusters.new.gff`` contains the highly confident positions 
+1. ``combined.rds.clusters.new.gff`` contains the highly confident positions 
    of 3´ ends. This file serves as an essential component of the pipeline, 
    as it guides the 3´-UTR correction and filtering process. The generation 
    of the database steps and quality metrics is explained in detailed 
    in this vignette [INSERT LINK]. This file can be replaced depending on the organism.  
-#.	``promoter.db.edp12.bed`` serves as a reference database indicating the 
+2. ``promoter.db.edp12.bed`` serves as a reference database indicating the 
    locations of validated transcription start sites. This file is utilized 
    during the FLAIR assembly step to guide the filtering of isoforms resulting 
    from sequencing artifacts occurring at the 5´ end of the isoforms.
-#.	``splice_junctions_filtered.tab`` is required for FLAIR assembly to 
+3. ``splice_junctions_filtered.tab`` is required for FLAIR assembly to 
    correct long reads for possible base mismatches and refine exon boundaries. 
-#.	``sqanti.polya.list`` contains a list of poly(A) hexamers that are scanned 
+4. ``sqanti.polya.list`` contains a list of poly(A) hexamers that are scanned 
    during the sqanti qc step. This list is relevant for the classification of 
    real 3´ ends of the assemblies.
 
-The default location for these is in the ``db`` directory, but they can be 
+Annotation locations
+--------------------
+
+The default location for the above files is in the ``db`` directory, but they can be 
 specified in ``config/config.yaml`` as key: value pairs. For example,
 
 ::
