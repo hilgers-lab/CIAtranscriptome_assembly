@@ -107,7 +107,7 @@ filtering of long read sequencing assemblies:
    of the database steps and quality metrics is explained in detailed 
    in this vignette [INSERT LINK]. This file can be replaced depending on the organism.  
 2. ``promoter.db.edp12.bed`` serves as a reference database indicating the 
-   locations of validated transcription start sites, obtained from the EDP Eukaryotic Promoter Database for `Drosophila melanogaster<https://epd.epfl.ch/drosophila/drosophila_database.php?db=drosophila>`. This file is utilized 
+   locations of validated transcription start sites, obtained from the EDP Eukaryotic Promoter Database for `Drosophila melanogaster<https://epd.epfl.ch/drosophila/drosophila_database.php?db=drosophila>`_. This file is utilized 
    during the FLAIR assembly step to guide the filtering of isoforms resulting 
    from sequencing artifacts occurring at the 5´ end of the isoforms. 
 3. ``splice_junctions_filtered.tab`` Short read sequencing SJ.out files `STAR<https://github.com/alexdobin/STAR>`. Example file in `here<https://github.com/hilgers-lab/SaiLoR/blob/master/inst/exdata/short_read_junctions.SJ.out.tab>`. We recommend to pull SJ.out into a single SJ.out from many experiments and filter by min counts. This file is required for FLAIR assembly to 
