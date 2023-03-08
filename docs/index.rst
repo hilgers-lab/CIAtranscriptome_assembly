@@ -110,7 +110,7 @@ filtering of long read sequencing assemblies:
    locations of validated transcription start sites, obtained from the EDP Eukaryotic Promoter Database for `Drosophila melanogaster <https://epd.epfl.ch/drosophila/drosophila_database.php?db=drosophila>`_. This file is utilized 
    during the FLAIR assembly step to guide the filtering of isoforms resulting 
    from sequencing artifacts occurring at the 5´ end of the isoforms. 
-3. ``splice_junctions_filtered.tab`` Short read sequencing SJ.out files `_STAR <https://github.com/alexdobin/STAR>_`. Example file in `_here <https://github.com/hilgers-lab/SaiLoR/blob/master/inst/exdata/short_read_junctions.SJ.out.tab>_`. We recommend to pull SJ.out into a single SJ.out from many experiments and filter by min counts. This file is required for FLAIR assembly to 
+3. ``splice_junctions_filtered.tab`` Short read sequencing SJ.out files _`STAR <https://github.com/alexdobin/STAR>`_. Example file in _`here <https://github.com/hilgers-lab/SaiLoR/blob/master/inst/exdata/short_read_junctions.SJ.out.tab>`_. We recommend to pull SJ.out into a single SJ.out from many experiments and filter by min counts. This file is required for FLAIR assembly to 
    correct long reads for possible base mismatches and refine exon boundaries. 
 4. ``sqanti.polya.list`` txt contains a list of poly(A) hexamers that are scanned 
    during the sqanti qc step. This list is relevant for the classification of 
