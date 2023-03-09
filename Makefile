@@ -33,14 +33,14 @@ clean-env:
 run:
 	./run.sh
 
-drosophila_annotation: db/dm6_ensembl/genome.chrom.sizes db/dm6_ensembl/release-96-genes.gtf db/dm6_ensembl/genome.fa
+drosophila_annotation: db/dm6_ensembl/genome.chrom.sizes db/dm6_ensembl/release-96-genes.gtf
 
 db/dm6_ensembl/genome.fa: 
-	mkdir -p $(dirname $@)
+	mkdir -p $(@D)
 	wget -O - $(DM6_GENOME_URL) | gunzip -c > $@
 
 db/dm6_ensembl/release-96-genes.gtf: 
-	mkdir -p $(dirname $@)
+	mkdir -p $(@D)
 	wget -O - $(DM6_GTF_URL) | gunzip -c > $@
 
 db/dm6_ensembl/genome.chrom.sizes: db/dm6_ensembl/genome.2bit .env-created
