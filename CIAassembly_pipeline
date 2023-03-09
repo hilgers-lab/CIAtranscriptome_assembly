@@ -295,6 +295,7 @@ rule sqanti_download:
         git clone https://github.com/ConesaLab/SQANTI3 {params.outdir}
         cd {params.outdir}
         git reset --hard {params.commit}
+        cd ../..
         """
 
 
@@ -337,10 +338,13 @@ rule sqanti_env_cupcake:
         cd {params.outdir}
         python setup.py build
         python setup.py install
+        cd ../..
         """
 
 rule gtf_to_gene_pred: 
-    input: "flags/sqanti_env.done"
+    input: 
+        env="flags/sqanti_env.done",
+        qc_script="src/sqanti/sqanti3_qc.py"
     output: "src/sqanti/utilities/gtfToGenePred"
     shell: 
         """
