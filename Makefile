@@ -33,7 +33,7 @@ clean-env:
 run:
 	./run.sh
 
-drosophila_annotation: db/dm6_ensembl/genome.chrom.sizes db/dm6_ensembl/release-96-genes.gtf
+drosophila_annotation: db/dm6_ensembl/genome.chrom.sizes db/dm6_ensembl/release-96-genes.gtf db/dm6_ensembl/genome.fa
 
 db/dm6_ensembl/genome.fa: 
 	mkdir -p $(dirname $@)
