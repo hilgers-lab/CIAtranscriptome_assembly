@@ -38,7 +38,16 @@ Getting started
 ---------------
 
 Download and install ``conda`` from 
-`here <https://docs.conda.io/en/latest/miniconda.html>`_. Then execute
+`here <https://docs.conda.io/en/latest/miniconda.html>`_. Execute 
+
+:: 
+
+    conda config --add channels defaults
+    conda config --add channels bioconda
+    conda config --add channels conda-forge
+    conda config --set channel_priority strict
+
+Then execute
 ``make env`` from the base directory to make the base snakemake environment. 
 This will result in an environment called ``snakemake-cia``. If you need
 to remove the conda environment, execute ``make clean-env``. 
