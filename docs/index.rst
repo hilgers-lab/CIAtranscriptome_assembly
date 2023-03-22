@@ -46,6 +46,7 @@ Download and install ``conda`` from
     conda config --add channels bioconda
     conda config --add channels conda-forge
     conda config --set channel_priority strict
+    conda install mamba -n base -c conda-forge
 
 Then execute
 ``make env`` from the base directory to make the base snakemake environment. 
