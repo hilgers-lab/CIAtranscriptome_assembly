@@ -1,6 +1,6 @@
 # CIA Transcriptome Assembly
 
-Snakefile pipeline of all the steps taken to reconstruct the CIA transcriptome assembly as in (Alfonso-Gonzalez, 2022). 
+Snakefile pipeline of all the steps taken to reconstruct the CIA transcriptome assembly as in (Alfonso-Gonzalez, 2023). 
 
 # Documentation
 
