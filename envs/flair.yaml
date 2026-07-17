@@ -1,8 +1,6 @@
 channels:
   - conda-forge
   - bioconda
-  - r
-  - defaults
 dependencies:
   - python >=3.6
   - numpy

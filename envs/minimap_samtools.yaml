@@ -1,7 +1,6 @@
 channels:
   - bioconda
   - conda-forge
-  - defaults
 dependencies:
   - minimap2   # or 2.7
   - samtools

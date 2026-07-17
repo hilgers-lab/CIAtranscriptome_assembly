@@ -1,8 +1,6 @@
 channels:
   - conda-forge
   - bioconda
-  - r
-  - defaults
 dependencies:
   - r-optparse
   - bioconductor-rtracklayer
@@ -20,3 +18,4 @@ dependencies:
   - r-rcolorbrewer
   - r-data.table
   - r-upsetr
+  - openssl

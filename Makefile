@@ -27,7 +27,7 @@ clean-env:
 	conda env remove -n $(CONDA_ENV)
 
 .env-created: 
-	conda create -y -n $(CONDA_ENV) -c conda-forge -c bioconda -c defaults $(CONDA_PACKAGES)
+	conda create -y -n $(CONDA_ENV) -c conda-forge -c bioconda $(CONDA_PACKAGES)
 	touch $@
 
 run:
